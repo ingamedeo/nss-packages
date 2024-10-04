@@ -1,6 +1,38 @@
+--- a/mc_forward.c
++++ b/mc_forward.c
+@@ -403,7 +403,7 @@
+ 
+ 		if (passup) {
+ 			/*multicast router is enabled, passing up for routing*/
+-			os_br_pass_frame_up(skb);
++			os_br_pass_frame_up(skb, false);
+ 		} else
+ 			kfree_skb(skb);
+ 		return 0;
+@@ -434,7 +434,7 @@
+ 		mc_do_router_flood(mdb, rhead, skb);
+ 
+ 	if (passup)
+-		os_br_pass_frame_up(skb);
++		os_br_pass_frame_up(skb, false);
+ 	else
+ 		kfree_skb(skb);
+ 
 --- a/mc_osdep.h
 +++ b/mc_osdep.h
-@@ -189,7 +189,7 @@ static inline struct net_bridge_port *mc
+@@ -22,9 +22,9 @@
+ #include <br_private.h>
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0))
+-static inline int os_br_pass_frame_up(struct sk_buff *skb)
++static inline int os_br_pass_frame_up(struct sk_buff *skb, bool promisc)
+ {
+-	return br_pass_frame_up(skb);
++	return br_pass_frame_up(skb, promisc);
+ }
+ #else
+ static inline int os_br_pass_frame_up(struct sk_buff *skb)
+@@ -189,7 +189,7 @@
  
  	dst = os_br_fdb_get((struct net_bridge *)br, eth_hdr(*skb)->h_dest);
  
@@ -11,7 +43,7 @@
  	return NULL;
 --- a/mc_snooping.c
 +++ b/mc_snooping.c
-@@ -3450,6 +3450,18 @@ static int mc_proc_snooper_open(struct i
+@@ -3442,6 +3442,18 @@
          return single_open(file, mc_proc_snooper_show, NULL);
  }
  
@@ -30,7 +62,7 @@
  static const struct file_operations mc_proc_snooper_fops = {
          .owner          = THIS_MODULE,
          .open           = mc_proc_snooper_open,
-@@ -3457,6 +3469,7 @@ static const struct file_operations mc_p
+@@ -3449,6 +3461,7 @@
          .llseek         = seq_lseek,
          .release        = single_release,
  };
