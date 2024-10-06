@@ -1,20 +1,33 @@
 --- a/mc_forward.c
 +++ b/mc_forward.c
-@@ -403,7 +403,7 @@
+@@ -332,7 +332,11 @@
+ 	struct hlist_head *rhead = NULL;
+ 	int is_management;
+ 	int passup = 0;
+-
++	bool promisc;
++	
++	struct net_device *brdev = BR_INPUT_SKB_CB(skb)->brdev;
++	promisc = !!(brdev->flags & IFF_PROMISC);
++	
+ 	eh = eth_hdr(skb);
+ 	etype = ntohs(eh->h_proto);
+ 
+@@ -403,7 +407,7 @@
  
  		if (passup) {
  			/*multicast router is enabled, passing up for routing*/
 -			os_br_pass_frame_up(skb);
-+			os_br_pass_frame_up(skb, false);
++			os_br_pass_frame_up(skb, promisc);
  		} else
  			kfree_skb(skb);
  		return 0;
-@@ -434,7 +434,7 @@
+@@ -434,7 +438,7 @@
  		mc_do_router_flood(mdb, rhead, skb);
  
  	if (passup)
 -		os_br_pass_frame_up(skb);
-+		os_br_pass_frame_up(skb, false);
++		os_br_pass_frame_up(skb, promisc);
  	else
  		kfree_skb(skb);
  
